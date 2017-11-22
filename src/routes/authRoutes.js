@@ -1,10 +1,11 @@
 const passport = require('passport');
+const routes = require('express').Router()
 
-module.exports = app =>{
-  app.get('/auth/facebook', passport.authenticate('facebook',{  scope: ['email']}));
+
+  routes.get('/auth/facebook', passport.authenticate('facebook',{  scope: ['email']}));
 
   //add parameter hre to tell if new user from the database
-  app.get('/auth/facebook/callback',
+  routes.get('/auth/facebook/callback',
     passport.authenticate('facebook'),
     (req,res)=>{
         res.redirect('/')
@@ -12,14 +13,15 @@ module.exports = app =>{
     }
   );
 
-  app.get('/api/current_user',(req,res)=>{
+  routes.get('/api/current_user',(req,res)=>{
     res.send(req.user);
 
   });
 
-  app.get('/api/logout',(req,res)=>{
+  routes.get('/api/logout',(req,res)=>{
     //removes the cookie
     req.logout();
     res.redirect('/');
   });
-};
+
+  module.exports = routes;

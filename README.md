@@ -1,3 +1,4 @@
+
 # Passport instructions
 ## Set up Server
 1.	Start node js
@@ -213,7 +214,10 @@ passport.use(new Strategy({
 
 ## Create auth routes
 We are now at a place that we should create the routes that passport requires. We shall have four routes:
-18. In a new directory routes, create an authRoutes.js.
+```js
+const authRoutes = require('./routes/authRoutes')(app);
+```
+18. In a new directory routes, create an authRoutes.js. Require this into out app.js file.
 19. Require in passport to this file
 
 ```js
@@ -244,7 +248,7 @@ app.get('/auth/facebook/callback',
 		}
 	);
 ```
-A request is sent back to facebook with the code to request the user information Facebook will see the code in the url and replies with the user details.
+A request is sent back to facebook with the code to request the user information. Facebook will see the code in the url and replies with the user details and is sent back to our server.
 
 24. We will create a route to check authentication:
 ``` js
@@ -254,7 +258,7 @@ app.get('/api/current_user',(req,res)=>{
   });
 ```
 
-25. Create a routes to logout. Logout is a special methid that exists in the request function now.
+25. Create a routes to logout. Logout is a special method that exists in the request function now.
 ``` js
 app.get('/api/logout',(req,res)=>{
     //removes the cookie
@@ -264,3 +268,77 @@ app.get('/api/logout',(req,res)=>{
 };
 
 ```
+
+## Serializing and Deserializing the user
+
+We have just created routes to authenticate a user for facebook. A message will be sent to facebook and a callback is then sent back from facebook with a unique code in the URL once the user has granted permission.
+
+This is a request code that is taken by our server and is used to get user data from facebook.
+
+## How passport works
+
+When a user clicks logon from the client side the the user is redirected to the route  ```auth/facebook``` , which has a passport function as its callback to forward the user's request to the  Facebook site.
+
+Facebook will then ask the user if they grant permission, and further action is done by the user to accept the request.
+
+Once this is done facebook returns the information with the callback URL that was declared in the passport.use statement that contains an additonal parameter with a code at the end of the URL. This code is supplied by Facebook.
+
+The user is briefly then put on hold as the code is taken from the URL. Passport then sends a follow up request to Facebook, where Facebook will see the request code in the URL now and will reply with user details. The user will not be kicked into the OAuth flow again as it has this code when it goes back to google.
+
+The second argument we passed to the Facebook strategy was the verify callback. When we are out of the google flow and the credentials have been verified we add/ check this user with out database. The done function is called with the user object model (userObj) and is sent to the next section of the passport flow.
+
+## Cookie based authentication
+
+HTTP is stateless. As a result when we move from one page to another in a browserit will not remember the state of the application. So how does passport help the browser remember we are now logged in?
+
+We use cookie based authentication.
+
+The done function that was send by the verfiy callback method with the user object from the database is passed to another function called to a function serializeUser that is called by passport. This creates an identifying piece of information from this object and Passport stuffs it into a cookie for us. Note OAuth only used to sign a user in, we then use our internal identification methods.
+
+```js
+passport.serializeUser((user, done)=> {
+	done(null, user.id);
+});
+```
+
+A follow up request is made and the cookie is automaticallt set and is passed in the header request to the borwser. The browser will strip this token and adds to the browser memory and will append the cookie for follow up requests.
+
+
+Passport will later be pased that identifying information out ofthe cookie and turn it into the user model function uniquely using teh deserializeUser function.
+
+?????? Add this blow the passport strategy.
+
+``` js
+
+passport.deserializeUser((id, done) => {
+	getUserData.id(id,(err,userObj)=>{
+		if (err){throw err;}
+		done(null,userObj);
+	});
+});
+```
+
+## Add Express and deal with cookies
+
+1. Under the passport strategy ass the express app:
+```js
+const app = express()
+```
+2. We must have body parser started up now to be able to deal with the cookie and requests effectively.
+```js
+app.use(bodyParser.json());
+```
+3.  We will not make use of the cookie-sessions module by adding the following code:
+```js
+app.use(
+  cookieSession({
+    maxAge:30 * 24 * 60 * 60* 1000,
+    keys: [process.env.COOKIEKEY]
+  })
+);
+```
+We add a max age here which indicates a max life of the cookie. We also supply a secret key so our cookie has a secret. Add a string to the config.env file to COOKIEKEY to act as the secret. Cookie sessions will now deal with the cookie and what passport will add the relevant information through the OAuth flow.
+
+## Start Passport
+
+Add the following lines after the cookie-sessions function is used (but before the static files are served) to initialise passport.
