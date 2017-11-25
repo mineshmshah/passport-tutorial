@@ -1,4 +1,4 @@
-# PassportJS instructions 
+# PassportJS Workshop 
 
 Passport is authentication middleware for Node.js. It is extremely flexible and modular and can be unobtrusively intgrated into any Express-based web application. Passort uses 'strategies' to handle different types of authentication.  We will be using the Facebook authentication here.
 
