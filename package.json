@@ -11,8 +11,9 @@
   "author": "Minesh Shah",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.2",
+    "env2": "^2.2.0",
     "express": "^4.16.2",
-    "nodemon": "^1.12.1"
+    "nodemon": "^1.12.1",
+    "pg-promise": "^7.3.2"
   }
 }
