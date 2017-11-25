@@ -268,6 +268,7 @@ We now need to handle cookies.
 const app = express()
 ```
 The position of this below the passport methods is crucial.
+
 2. We must have **body parser** started up now to be able to deal with the cookie and requests effectively.
 ```js
 app.use(bodyParser.json());
