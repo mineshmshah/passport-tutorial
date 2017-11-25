@@ -22,22 +22,22 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 2.  Navigate to your text editor. in the /src folder you will see an index.js which will start the basic server  and app.js that will hold the relevant files needed for express and the passport middleware.
 
 ## Set up config file and start build the database
-3. The npm install wouldhave added env2 we need to require this into into app.js.
+1. The npm install wouldhave added env2 we need to require this into into app.js.
 ```js
 const env = require('env2')('./config.env');
 ```
 
-4. Create a config.env file in the root directory.
-5. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
+2. Create a config.env file in the root directory.
+3. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
 DATABASE_URL = postgres://[username]:[password]@localhost:5432/[database]
 ```
-7. Build the database with:
+4. Build the database with:
 ```js
 node db/db_build.js
 ```
-8. The database will have test cases added to check if it is working in the SQL file.
-9. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
+5. The database will have test cases added to check if it is working in the SQL file.
+6. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
 
 ## Passport overview
 
@@ -159,30 +159,30 @@ We are now at a place that we should create the routes that passport requires. W
 const routes = require('./routes/authRoutes');
 ```
 
-19. Require in **passport** and **express Router** to this authRoutes.js
+2. Require in **passport** and **express Router** to this authRoutes.js
 
 ```js
 const passport = require('passport');
 const routes = require('express').Router()
 
 ```
-20. Export all the routes with module.exports at the bottom of the file.
+3. Export all the routes with module.exports at the bottom of the file.
 ```js
 module.exports = routes;
 ```
 
-22. Now add the routes to after the imports. The first route should be the route that a user from the client will click on in the front end. This is a message from the front end to our server to **start the OAuth flow**.
+4. Now add the routes to after the imports. The first route should be the route that a user from the client will click on in the front end. This is a message from the front end to our server to **start the OAuth flow**.
 ``` js
 
 app.get('/auth/facebook',
         passport.authenticate('facebook',
             {  scope: ['email']}));
 ```
-The callback for the get method is where **passport is used to authenticated the user**. The authenticate method on passport sends a message to fcebook where the user must verify that they wish to approve the app. The passport callback here has two parameters:
+The callback for the get method is where **passport is used to authenticated the user**. The authenticate method on passport sends a message to facebook where the user must verify that they wish to approve the app. The passport callback here has two parameters:
 * The **streatetgy** and the type of authentication - in this case facebook.
 *  **Additional data** as an object you are requesting back from facebook that is not part of the default response given by facebook. (More info on the facebook API).
 
-23. A callback function was specified in  the Facebook strategy in app.js. When Facebook has authenticated the user, **Facebook will redirect back to server** with this URL and add a unique code at the end of it back to the server to indicate the person has been authenticated. The route for this is as follows:
+5. A callback function was specified in  the Facebook strategy in app.js. When Facebook has authenticated the user, **Facebook will redirect back to server** with this URL and add a unique code at the end of it back to the server to indicate the person has been authenticated. The route for this is as follows:
 ``` js
 app.get('/auth/facebook/callback',
 		passport.authenticate('facebook'),
@@ -193,7 +193,7 @@ app.get('/auth/facebook/callback',
 ```
 A request is sent back to facebook with the code automatically by passport to request the user information. Facebook will now see the code in the url, and replies again with the user details and is sent back to our server.
 
-24. We will create a route to **check authentication**:
+6. We will create a route to **check authentication**:
 ``` js
 app.get('/api/current_user',(req,res)=>{
     res.send(req.user);
@@ -201,7 +201,7 @@ app.get('/api/current_user',(req,res)=>{
   });
 ```
 
-25. Create a routes to **logout**. Logout is a special method that exists in the request function now thanks to PassportJS.
+7. Create a routes to **logout**. Logout is a special method that exists in the request function now thanks to PassportJS.
 ``` js
 app.get('/api/logout',(req,res)=>{
     //removes the cookie
@@ -268,6 +268,7 @@ We now need to handle cookies.
 const app = express()
 ```
 The position of this below the passport methods is crucial.
+
 2. We must have **body parser** started up now to be able to deal with the cookie and requests effectively.
 ```js
 app.use(bodyParser.json());
