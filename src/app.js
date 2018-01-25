@@ -3,6 +3,8 @@ const path = require('path');
 const getUserData = require('./model/getUserData');
 const postFBData = require('./model/postUserData');
 
+const env = require('env2')('./config.env');
+
 
 // const favicon = require('serve-favicon');
 

@@ -18,11 +18,7 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 
 
 ## Set up config file and start up server up
-1. The npm install would have added env2.  We need to require this into into app.js.
-```js
-const env = require('env2')('./config.env');
-```
-2. Create a config.env file in the root directory.
+1. The npm install would have added env2.  We need to now create a config.env file in the root directory.
 3.	To test the server with nodemon, use **npm run devStart**
 4.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server,  and app.js which holds the relevant files needed for express and the passport middleware.
 
@@ -73,10 +69,6 @@ const Strategy = require('passport-facebook').Strategy;
 ```js
 FB_CLIENTID = [your facebook app id]
 FB_SECRET = [your facebook app secret]
-```
-2. Require in the env file into app.js with the other imports:
-```js
-const env = require('env2')('./config.env');
 ```
 
 ## Launch Passport strategy
@@ -239,7 +231,7 @@ See the diagram of the flow above to get a picture of what is handled by Passpor
 
 #### We use cookie based authentication.
 
-The done function that was send by the **verify callback** method with a user object passed from our database is passed to another function called **serializeUser** that is used by PassportJS. This creates an **identifying piece of information** from this object and Passport stuffs it into a **cookie** for us. (Note Facebook OAuth was only used to sign a user in, we are now just using our internal identification methods.)
+The done function that was sent by the **verify callback** method with a user object passed from our database is passed to another function called **serializeUser** that is used by PassportJS. This creates an **identifying piece of information** from this object and Passport stuffs it into a **cookie** for us. (Note Facebook OAuth was only used to sign a user in, we are now just using our internal identification methods.)
 
 1. Add the following code under the strategy in the app.js file:
 
