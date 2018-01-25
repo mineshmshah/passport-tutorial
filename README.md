@@ -1,12 +1,12 @@
 # PassportJS Workshop 
 
-Passport is authentication middleware for Node.js. It is extremely flexible and modular and can be unobtrusively intgrated into any Express-based web application. Passort uses 'strategies' to handle different types of authentication.  We will be using the Facebook authentication here.
+Passport is authentication middleware for Node.js. It is extremely flexible and modular and can be unobtrusively integrated into any Express-based web application. Passport uses 'strategies' to handle different types of authentication.  We will be using the Facebook authentication here.
 
 ## Initial Setup
 
 The starting file that is provided with this repo has a few things set up for you ready to go. The modelling is done in postgreSQL. Before going forward there are a few items to point out:
-* Please make sure you hav a database set up so you can use it here, prior to starting this workshop. 
-* The config.env file is not included that private Facebook info. The steps to add the relevant pieces of information will be outlined in the workshop.
+* Please make sure you have a database set up so you can use it here, prior to starting this workshop.
+* The config.env file is not included. This is where that private Facebook info will be stored. The steps to add the relevant pieces of information will be outlined in the workshop.
 * The database model methods will be explained below.
 * A basic server has been set up for you.
 
@@ -17,43 +17,52 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 2. Run npm install.
 
 
-## Start up server up Server
-1.	To test the server with nodemon using **npm run devStart**
-2.  Navigate to your text editor. in the /src folder you will see an index.js which will start the basic server  and app.js that will hold the relevant files needed for express and the passport middleware.
+## Set up config file and start up server up
+1. The npm install would have added env2.  We need to now create a config.env file in the root directory.
+3.	To test the server with nodemon, use **npm run devStart**
+4.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server,  and app.js which holds the relevant files needed for express and the passport middleware.
 
-## Set up config file and start build the database
-1. The npm install wouldhave added env2 we need to require this into into app.js.
-```js
-const env = require('env2')('./config.env');
-```
+## Build the database
+**Note**: Here are some quick instructions to remind you how to set up a database:
+  In terminal type psql, or pgcli if installed. Within psql/pcli enter the following commands each followed by a return. Things in square brackets are for your desired values. Note that password is a string inside '' (NOT double quotes-> ""):
 
-2. Create a config.env file in the root directory.
-3. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
+      ```
+      CREATE DATABASE [db_name];
+      CREATE USER [user_name] WITH SUPERUSER PASSWORD ['password'];
+      ALTER DATABASE [db_name] OWNER TO [user_name];
+      ```
+
+1. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
 DATABASE_URL = postgres://[username]:[password]@localhost:5432/[database]
 ```
-4. Build the database with:
+2. Build the database with:
 ```js
 node db/db_build.js
 ```
-5. The database will have test cases added to check if it is working in the SQL file.
-6. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
+3. The database will have test cases added to check if it is working in the SQL file.
+4. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
 
 ## Passport overview
 
 ![passportimage](/diagrams/Passport_Flow.png)
 
-The diagram above shows the flow that passport goes throug from the client to the server and includes the steps done be Facebook. Facebook is only reponsible for authorising the OAuth flow. The rest of the authentication and cookie handling will be done by passport.
+The diagram above shows the flow that passport goes through from the client to the server and includes the steps done by Facebook. Facebook is only reponsible for authorising the OAuth flow. The rest of the authentication and cookie handling will be done by passport.
 
 ## Set up passport and the strategy
 For passport to run we are going to need to import two different node packages. Firstly we need to get the npm package 'passport' to run all the passport methods and middleware. We also need the passport strategy.
 
-A **passport strategy** allows us to implement some form authentification flow. This can be through OAuth like we will use or though a local database, called a 'passport-local' strategy. we are going to use the facebook OAuth flow.
+A **passport strategy** allows us to implement a form of authentication flow. This can be through OAuth like we will use or though a local database, called a 'passport-local' strategy. We are going to use the facebook OAuth flow.
 
 1. Install **'passport'** and **'passport-facebook'** npm modules. Passport-facebook is the strategy we will use.
-1. Install **'body-parser'** npm package. This will parse the body of the request data. This is necessary for passport to get the corrent information out of the request.
-1. Import **'cookie-session'** npm module. This will deal with cookie handling later as passport doesnt handle cookies outside of the box.
-1.  Require in passport and the strategy in app.js as the following code shows.
+1. Install **'body-parser'** npm package. This will parse the body of the request data. This is necessary for passport to get the correct information out of the request.
+1. Install  **'cookie-session'** npm module. This will deal with cookie handling later as passport doesnt handle cookies out of the box.
+1. Require in cookie-session and body parse:
+```
+const cookieSession = require('cookie-session');
+const bodyParser = require('body-parser');
+```
+1. Require in passport and the strategy in app.js as the following code shows.
 ```js
 const passport = require('passport');
 const Strategy = require('passport-facebook').Strategy;
@@ -69,10 +78,6 @@ const Strategy = require('passport-facebook').Strategy;
 FB_CLIENTID = [your facebook app id]
 FB_SECRET = [your facebook app secret]
 ```
-2. Require in the env file into app.js with the other imports:
-```js
-const env = require('env2')('./config.env');
-```
 
 ## Launch Passport strategy
 
@@ -84,7 +89,7 @@ passport.use()
 ```js
 passport.use(new Strategy())
 ```
-We pass a new Strategy to the pasport middleware which takes two arguments:
+We pass a new Strategy to the passport middleware which takes two arguments:
 - An **object** with the facebook specific keys for your request
 - A **verify callback** that passport uses to deliver the requested information to the database.
 
@@ -92,7 +97,7 @@ We pass a new Strategy to the pasport middleware which takes two arguments:
 - **clientID**: The facebook client ID
 - **clientSecret**: The facebook secret ID
 - **callbackURL**: A callback URL facebook will send back when the request is made.
-- **profileFields** *(optional)*: The particual fields of interest that you would like extracted
+- **profileFields** *(optional)*: The particular fields of interest that you would like extracted
 4. The second argument is a callback which has the following arguments supplied by facebook:
 - **accessToken**
 - **refreshToken**
@@ -131,12 +136,14 @@ passport.use(new Strategy({
     // This is an error coming from pg
     if(err) {
       console.log('Database error',err);
+      return done(err)
     }
     // The search as successful but an empty string was returned so add profile
     if(!userObj){
       postFBData.users(profile._json.id, profile._json.name, profile._json.email, profile._json.picture.data.url, 'true' , profile._json.link,(err,userObj)=>{
         if (err){
           console.log(err);
+          done(err)
         }else{
           done(null,userObj);
         }
@@ -153,8 +160,8 @@ passport.use(new Strategy({
 ```
 
 ## Create Auth Routes
-We are now at a place that we should create the routes that passport requires. We shall have four routes that outlined below.
-1. Navigate to the **src/routes/** anc reate a **authRoutes.js** file file and add the following code to app.js:
+We are now at a place where we should create the routes that passport requires. We shall have four routes that are outlined below.
+1. Navigate to the **src/routes/** and create an **authRoutes.js** file file and add the following code to app.js:
 ```js
 const routes = require('./routes/authRoutes');
 ```
@@ -171,7 +178,7 @@ const routes = require('express').Router()
 module.exports = routes;
 ```
 
-4. Now add the routes to after the imports. The first route should be the route that a user from the client will click on in the front end. This is a message from the front end to our server to **start the OAuth flow**.
+4. Now add the routes after the imports in the file. The first route should be the route that a user from the client will click on in the front end. This is a message from the front end to our server to **start the OAuth flow**.
 ``` js
 
 app.get('/auth/facebook',
@@ -179,8 +186,8 @@ app.get('/auth/facebook',
             {  scope: ['email']}));
 ```
 The callback for the get method is where **passport is used to authenticated the user**. The authenticate method on passport sends a message to facebook where the user must verify that they wish to approve the app. The passport callback here has two parameters:
-* The **streatetgy** and the type of authentication - in this case facebook.
-*  **Additional data** as an object you are requesting back from facebook that is not part of the default response given by facebook. (More info on the facebook API).
+* The **strategy** and the type of authentication - in this case facebook.
+*  **Additional data** is an object you are requesting back from facebook that is not part of the default response given by facebook. (More info on the facebook API).
 
 5. A callback function was specified in  the Facebook strategy in app.js. When Facebook has authenticated the user, **Facebook will redirect back to server** with this URL and add a unique code at the end of it back to the server to indicate the person has been authenticated. The route for this is as follows:
 ``` js
@@ -222,7 +229,7 @@ Once this is done **facebook returns the information with the callback URL** tha
 
 The user is briefly then put on hold as the code is taken from the URL. Passport then sends a **follow up request to Facebook**, where Facebook will see the request code in the URL now and will reply with **user details**. The user will not be kicked into the OAuth flow again, as it has this code when it goes back to Facebook. The job by facebook is now done.
 
-The second argument we passed to the Facebook strategy was the **verify callback**. When we are out of the google flow and the credentials have been verified we add/check this user with our database. The **done** function is called with the user object model **(userObj)** and is sent to the next section of the passport flow.
+The second argument we passed to the Facebook strategy was the **verify callback**. When we are out of the OAuth flow and the credentials have been verified we add/check this user with our database. The **done** function is called with the user object model **(userObj)** and is sent to the next section of the passport flow.
 
 See the diagram of the flow above to get a picture of what is handled by Passport.
 
@@ -232,9 +239,9 @@ See the diagram of the flow above to get a picture of what is handled by Passpor
 
 #### We use cookie based authentication.
 
-The done function that was send by the **verfiy callback** method with a user object passed from our database is passed to another function called **serializeUser** that is used by PassportJS. This creates an **identifying piece of information** from this object and Passport stuffs it into a **cookie** for us. (Note Facebook OAuth was only used to sign a user in, we are now just using our internal identification methods.)
+The done function that was sent by the **verify callback** method with a user object passed from our database is passed to another function called **serializeUser** that is used by PassportJS. This creates an **identifying piece of information** from this object and Passport stuffs it into a **cookie** for us. (Note Facebook OAuth was only used to sign a user in, we are now just using our internal identification methods.)
 
-1. Add the following code unnder the strategy in the app.js file:
+1. Add the following code under the strategy in the app.js file:
 
 ```js
 passport.serializeUser((user, done)=> {
@@ -242,10 +249,10 @@ passport.serializeUser((user, done)=> {
 });
 ```
 
-A follow up request is made and the cookie is automatically set and is passed in the header request to the borwser. The browser will strip this token and add it to the browser memory and will append the cookie for follow up requests.
+A follow up request is made and the cookie is automatically set and is passed in the header request to the browser. The browser will strip this token and add it to the browser memory and will append the cookie for follow up requests.
 
 
-2. Passport will later be passed that identifying information out of the cookie when a request by the user is made, and it will use the final ***get.id*** database model function using a passport function called **deserializeUser** function from our database.  Add this code under the serialize mehod in the app.js file:
+2. Passport will later be passed that identifying information out of the cookie when a request by the user is made, and it will use the final ***get.id*** database model function using a passport function called **deserializeUser** function from our database.  Add this code under the serialize method in the app.js file:
 
 
 
@@ -273,7 +280,7 @@ The position of this below the passport methods is crucial.
 ```js
 app.use(bodyParser.json());
 ```
-3.  We will not make use of the **cookie-sessions** module by adding the following code:
+3.  We will now make use of the **cookie-sessions** module by adding the following code:
 ```js
 app.use(
   cookieSession({
@@ -282,18 +289,18 @@ app.use(
   })
 );
 ```
-THe cookie needs two pieces of info:
+The cookie needs two pieces of info:
 * We add a **max age** here which indicates a max life of the cookie.
 * We also supply a **secret key** so our cookie has a secret. Add a string to the config.env file to COOKIEKEY to act as the secret.
 ```js
-COOKIEKEY = '[Add a secrete string]'
+COOKIEKEY = '[Add a secret string]'
 ```
 
 Cookie sessions will now deal with the cookie and what passport will add the relevant information through the OAuth flow.
 
 ## Start Passport
  We are almost ready to start passport up!
-1. Add the following lines after the cookie-sessions function is used in app.js (but before the static files are served) to initialise passport.
+1. Add the following lines after where the cookie-sessions function is used in app.js (but before the static files are served) to initialise passport.
 ```js
 app.use(passport.initialize());
 app.use(passport.session());
@@ -310,10 +317,10 @@ app.use('/',routes)
 
 ## Now Your turn
 
-The methods for other strategies are very similar.  the main difference is the way the stragetfy is written out and how to log in to the sites and get the relevant app Ids and secret.
+The methods for other strategies are very similar.  the main difference is the way the strategy is written out and how to log in to the sites and get the relevant app Ids and secret.
 
 Try out the same process for a **Google OAuth flow.**
 
 
 
-I hope you find this tutorial helful and informative. If you spot any issues or have questions please let me know :D!
+I hope you find this tutorial helpful and informative. If you spot any issues or have questions please let me know :D!
