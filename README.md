@@ -23,6 +23,14 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 4.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server,  and app.js which holds the relevant files needed for express and the passport middleware.
 
 ## Build the database
+**Note**: Here are some quick instructions to remind you how to set up a database:
+  In terminal type psql, or pgcli if installed. Within psql/pcli enter the following commands each followed by a return. Things in square brackets are for your desired values. Note that password is a string inside '' (NOT double quotes-> ""):
+
+      ```
+      CREATE DATABASE [db_name];
+      CREATE USER [user_name] WITH SUPERUSER PASSWORD ['password'];
+      ALTER DATABASE [db_name] OWNER TO [user_name];
+      ```
 
 1. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
