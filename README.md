@@ -17,17 +17,17 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 2. Run npm install.
 
 
-## Start up server up Server
-1.	To test the server with nodemon using **npm run devStart**
-2.  Navigate to your text editor. in the /src folder you will see an index.js which will start the basic server  and app.js that will hold the relevant files needed for express and the passport middleware.
-
-## Set up config file and start build the database
-1. The npm install would have added env2 we need to require this into into app.js.
+## Set up config file and start up server up
+1. The npm install would have added env2.  We need to require this into into app.js.
 ```js
 const env = require('env2')('./config.env');
 ```
-
 2. Create a config.env file in the root directory.
+1.	To test the server with nodemon, use **npm run devStart**
+2.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server  and app.js that will hold the relevant files needed for express and the passport middleware.
+
+## Build the database
+
 3. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
 DATABASE_URL = postgres://[username]:[password]@localhost:5432/[database]
