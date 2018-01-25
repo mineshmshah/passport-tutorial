@@ -23,21 +23,21 @@ git clone https://github.com/mineshmshah/passport-tutorial.git
 const env = require('env2')('./config.env');
 ```
 2. Create a config.env file in the root directory.
-1.	To test the server with nodemon, use **npm run devStart**
-2.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server  and app.js that will hold the relevant files needed for express and the passport middleware.
+3.	To test the server with nodemon, use **npm run devStart**
+4.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server,  and app.js which holds the relevant files needed for express and the passport middleware.
 
 ## Build the database
 
-3. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
+1. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
 DATABASE_URL = postgres://[username]:[password]@localhost:5432/[database]
 ```
-4. Build the database with:
+2. Build the database with:
 ```js
 node db/db_build.js
 ```
-5. The database will have test cases added to check if it is working in the SQL file.
-6. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
+3. The database will have test cases added to check if it is working in the SQL file.
+4. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
 
 ## Passport overview
 
@@ -52,8 +52,13 @@ A **passport strategy** allows us to implement a form of authentication flow. Th
 
 1. Install **'passport'** and **'passport-facebook'** npm modules. Passport-facebook is the strategy we will use.
 1. Install **'body-parser'** npm package. This will parse the body of the request data. This is necessary for passport to get the correct information out of the request.
-1. Import **'cookie-session'** npm module. This will deal with cookie handling later as passport doesnt handle cookies out of the box.
-1.  Require in passport and the strategy in app.js as the following code shows.
+1. Install  **'cookie-session'** npm module. This will deal with cookie handling later as passport doesnt handle cookies out of the box.
+1. Require in cookie-session and body parse:
+```
+const cookieSession = require('cookie-session');
+const bodyParser = require('body-parser');
+```
+1. Require in passport and the strategy in app.js as the following code shows.
 ```js
 const passport = require('passport');
 const Strategy = require('passport-facebook').Strategy;
@@ -131,12 +136,14 @@ passport.use(new Strategy({
     // This is an error coming from pg
     if(err) {
       console.log('Database error',err);
+      return done(err)
     }
     // The search as successful but an empty string was returned so add profile
     if(!userObj){
       postFBData.users(profile._json.id, profile._json.name, profile._json.email, profile._json.picture.data.url, 'true' , profile._json.link,(err,userObj)=>{
         if (err){
           console.log(err);
+          done(err)
         }else{
           done(null,userObj);
         }
@@ -293,7 +300,7 @@ Cookie sessions will now deal with the cookie and what passport will add the rel
 
 ## Start Passport
  We are almost ready to start passport up!
-1. Add the following lines after the cookie-sessions function is used in app.js (but before the static files are served) to initialise passport.
+1. Add the following lines after where the cookie-sessions function is used in app.js (but before the static files are served) to initialise passport.
 ```js
 app.use(passport.initialize());
 app.use(passport.session());
