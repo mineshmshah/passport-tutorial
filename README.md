@@ -1,36 +1,134 @@
-# PassportJS Workshop 
+# OAuth and PassportJS Workshop
+
+You may have come across many applications that ask you to do use a 'social login' e.g. such as 'Sign in with Facebook'. There is a common misconception where people think you are are giving an application like this your social login details.
+
+#### This is not the case!!!
+
+![wrong](https://giphy.com/gifs/joel-mchale-incorrect-m8eIbBdkJK7Go)
+
+
+The process involved is called OAuth and is a lot more complicated and safer than having your passwords distributed. This workshop goes over the high level processes and ideas involved for this to work, and will allow you to implement your very own social logins using PassportJS.
+
+## Learning Outcomes
+* To understand the principles of OAuth and how it works
+* To implement OAuth using PassportJS middleware
+* To use more advanced middleware that also uses promises
+* To get authorised to get information from a resource server and save it to a database
+
+
+## What is OAuth and how does it work?
+
+### So what really is OAuth?
+OAuth is an open standard for access delegation, commonly used as a way for Internet users to grant websites or applications access to their information on other websites but without giving them the passwords.
+
+So it is a process to allow applications, or an **OAuth Client** to gain access to information from and **OAuth Provider** such as Facebook, Twitter, Github etc
+
+Before we go jumping into the process it may be wise to get some terminology out of the way...
+
+### Authentication and Authorisation
+
+Two terms that come up a lot in this process are authentication and authorisation so let's start of my defining and differentiating the two:
+
+* **Authentication** is the process of verifying who you are. When you log on to a PC with a user name and password you are authenticating.
+* **Authorization** is the process of verifying that you have access to something. Gaining access to a resource (e.g. directory on a hard disk) because the permissions configured on it allow you access is authorization.
+
+So in a more simple way:
+
+* Authentication is about who somebody is.
+* Authorisation is about what they're allowed to do.
+
+OAuth actually is an authorisation client but frameworks that use it often deal with the Authentication process usually with Open ID Connect which deals with the authentication by passing ID tokens.
+
+### How does OAuth work?
+![passportimage](/diagrams/OAuth.png)
+There are 4 main players involved with the OAuth process.
+
+* The **user** (A person)
+* The **OAuth Client** - some application using OAuth e.g. Spotify
+* The **OAuth Provider** (Authentication Server) - This is the server that will deal with getting you access to the information you want. e.g. Facebook
+* The **OAuth Provider** (Resource Server) - This is where your data is stored that will send back the information that is requested.
+
+1. Before anything can happen the OAuth client must sign up to the provider and get credentials to verify the OAuth client. They will get a **client ID** and a **client secret**.
+
+    So a company like Spotify may go to Facebook, and sign up to their developer site to get this information at a page like this:
+
+    ![facebook dev site](https://www.scirra.com/images/articles/capture_18.png)
+
+    2. A user will then navigate to the site and request to login via some social login.
+    3. The OAuth client sends a request to the OAuth provider's authorisation server. A get request with the **Client ID**, **Client secret** and **Redirect URL** is sent. The redirect URL lets the provider know where to send the response back.
+    4.  The provide will then ask the user to login with their details and authorise the various permissions being requested. A page like this will be shown:
+    ![Authorise page](https://heimdalsecurity.com/blog/wp-content/uploads/log-in-with-facebook-permissions.png)
+
+    5.  The provider deals with the authentication process to verify the user. This is not actually done by OAuth but under the hood uses tools such as Open ID connect to deal with this.
+    6.  The provider then redirects to the OAuth client using redirect URL. A one time token for authorisation will be sent back.
+    7.  The OAuth Client receives the newly created authorisation token. Now that the user is authenticated the OAuth client must get authetnicated too. It sends the same request that it made before to the OAuth provider, but this time attatching the authorisation token. This stage happens in the background and the user wont see this.
+    8.  If all the details are valid then the OAuth provider will now send an access token. This is the token that will now allow access to the information requested and given permission by the user.
+    9.  The OAuth client then sends a request to the resource server with the access token and will get the requested information.( Note: There is usually a time restriction for how long this token is valid for)
+    10.  The user will now be logged in / application(OAuth client) would have the information requested.
+
+So **NO PASSWORDS were exchanged** in the process. It is a long process but the OAuth framework effectively deals with this.
+
+## So what is PassportJS and why is it helpful ?
+
+So why are we using PassportJS? Because it deals with the entire OAuth process for you. It is trickt to set up, but it allows us to easily add multiple sign in methods / OAuth processes quickly once set up, and it deals with alot of what happens in the background for you in a very similar process for all types of providers. Just pass in the relevant Ids and secrets, tell it what you want out and you're good to go.
+
+### What is Passport?
 
 Passport is authentication middleware for Node.js. It is extremely flexible and modular and can be unobtrusively integrated into any Express-based web application. Passport uses 'strategies' to handle different types of authentication.  We will be using the Facebook authentication here.
 
-## Initial Setup
+It also effectively deals with cookie session management for you so keeps track of sessions effectivly.
 
-The starting file that is provided with this repo has a few things set up for you ready to go. The modelling is done in postgreSQL. Before going forward there are a few items to point out:
-* Please make sure you have a database set up so you can use it here, prior to starting this workshop.
+## How Does Passport work?
+
+![passportimage](/diagrams/Passport_Flow.png)
+
+The diagram above shows the flow that passport goes through from the client to the server and includes the steps done by Facebook. Facebook is only reponsible for authorising the OAuth flow. The rest of the authentication and cookie handling will be done by passport.
+
+
+1. When a user clicks logon from the client side, the the user is redirected to the route auth/facebook , which has a passport function as a callback (see route above) to forward the user’s request to the Facebook site.
+
+2. Facebook will then ask the user if they grant permission, and further action is done by the user to accept the request.
+
+3. Once this is done facebook returns the information with the callback(redirect) URL that will be declared in a passport.use statement. Itcontains an additonal parameter - an authorisation code at the end of the URL. This unique code is supplied by Facebook that indicates the user has been granted permission.
+
+4. The user is briefly then put on hold as the code is taken from the URL. Passport then sends a follow up request to Facebook now with the authorisation token.  Facebook will see the request code in the URL now and will reply with user details requested from their resource servers. The user will not be kicked into the OAuth flow again, as it now has this authorisation code when it goes back to Facebook. The job by Facebook  is now done.
+
+5. A second argument will be passed to the Facebook strategy called the verify callback. When we are out of the OAuth flow and the credentials have been verified we add/check this user with our database. A calback  'done' function is called with the user object model (userObj in our case) and is sent to the next section of the passport flow. This will deal with the cookie session aspect introduced in a bit.
+
+See the diagram of the flow above to get a picture of what is handled by Passport.
+
+## Passport Workshop (using PostgreSQL)
+We have finally made it! A few inital things are needed to be setup:
+
+### Initial Setup
+
+The starting file that is provided with this repo has a few things set up for you ready to go. (Instructuons given below as a reminder). The modelling is done in postgreSQL. Before going forward there are a few items to point out:
+* Please make sure you have a database set up so you can use it here.
 * The config.env file is not included. This is where that private Facebook info will be stored. The steps to add the relevant pieces of information will be outlined in the workshop.
 * The database model methods will be explained below.
 * A basic server has been set up for you.
 
-1. Clone this repo 
+1. Clone this repo
 ```git
 git clone https://github.com/mineshmshah/passport-tutorial.git
 ```
-2. Run npm install.
+2. Run ```npm install```.
 
 
 ## Set up config file and start up server up
-1. The npm install would have added env2.  We need to now create a config.env file in the root directory.
+1. The npm install would have added ```env2```.  We need to now create a ```config.env``` file in the root directory.
 3.	To test the server with nodemon, use **npm run devStart**
 4.  Navigate to your text editor. In the /src folder you will see an index.js which will start the basic server,  and app.js which holds the relevant files needed for express and the passport middleware.
 
 ## Build the database
 **Note**: Here are some quick instructions to remind you how to set up a database:
-  In terminal type psql, or pgcli if installed. Within psql/pcli enter the following commands each followed by a return. Things in square brackets are for your desired values. Note that password is a string inside '' (NOT double quotes-> ""):
 
-      ```
-      CREATE DATABASE [db_name];
-      CREATE USER [user_name] WITH SUPERUSER PASSWORD ['password'];
-      ALTER DATABASE [db_name] OWNER TO [user_name];
-      ```
+In terminal type psql, or pgcli if installed. Within psql/pcli enter the following commands each followed by a return. Things in square brackets are for your desired values. Note that password is a string inside '' (NOT double quotes ""):
+```
+CREATE DATABASE [db_name];
+CREATE USER [user_name] WITH SUPERUSER PASSWORD ['password'];
+ALTER DATABASE [db_name] OWNER TO [user_name];
+```
 
 1. Pg-Promise has been installed for you for the postgreSQL database. We need  to add the database URL in the following format, adding your database's details:
 ```js
@@ -43,26 +141,22 @@ node db/db_build.js
 3. The database will have test cases added to check if it is working in the SQL file.
 4. The database that has been made has three methods. Two get methods and a post method. The reasoning behind it is explained later in terms of passport below. The get methods are used to retrieve the facebook id and the id of the entry in the database. The post method will be used to post the data recieved from facebook to our database. We should now be ready to start adding the passport elements.
 
-## Passport overview
 
-![passportimage](/diagrams/Passport_Flow.png)
-
-The diagram above shows the flow that passport goes through from the client to the server and includes the steps done by Facebook. Facebook is only reponsible for authorising the OAuth flow. The rest of the authentication and cookie handling will be done by passport.
 
 ## Set up passport and the strategy
 For passport to run we are going to need to import two different node packages. Firstly we need to get the npm package 'passport' to run all the passport methods and middleware. We also need the passport strategy.
 
-A **passport strategy** allows us to implement a form of authentication flow. This can be through OAuth like we will use or though a local database, called a 'passport-local' strategy. We are going to use the facebook OAuth flow.
+A **passport strategy** allows us to implement a form of authentication flow. This can be through OAuth like we will use or through a local database, called a 'passport-local' strategy. We are going to use the Facebook OAuth flow.
 
 1. Install **'passport'** and **'passport-facebook'** npm modules. Passport-facebook is the strategy we will use.
 1. Install **'body-parser'** npm package. This will parse the body of the request data. This is necessary for passport to get the correct information out of the request.
 1. Install  **'cookie-session'** npm module. This will deal with cookie handling later as passport doesnt handle cookies out of the box.
-1. Require in cookie-session and body parse:
-```
+1. Require in cookie-session and body parser:
+```js
 const cookieSession = require('cookie-session');
 const bodyParser = require('body-parser');
 ```
-1. Require in passport and the strategy in app.js as the following code shows.
+5. Require in passport and the strategy in app.js as the following code shows.
 ```js
 const passport = require('passport');
 const Strategy = require('passport-facebook').Strategy;
@@ -73,13 +167,13 @@ const Strategy = require('passport-facebook').Strategy;
 1. Sign up to developer.facebook.com.
 2. Once registered in My Apps click on add new app.
 3. Add a suitable name and description for your app.
-4. Navigate to the dashboard. From here copy the app ID and app secrete and store it in yor config.env file.
+4. Navigate to the dashboard. From here copy the app ID and app secret and store it in yor config.env file.
 ```js
 FB_CLIENTID = [your facebook app id]
 FB_SECRET = [your facebook app secret]
 ```
 
-## Launch Passport strategy
+## Launch Passport Strategy
 
 1. We are now ready to fire up the passport middleware and use it. Add the following code to use passport in app.js under your imports. It MUST be BEFORE the code where express starts (const app).
 ```js
@@ -97,8 +191,8 @@ We pass a new Strategy to the passport middleware which takes two arguments:
 - **clientID**: The facebook client ID
 - **clientSecret**: The facebook secret ID
 - **callbackURL**: A callback URL facebook will send back when the request is made.
-- **profileFields** *(optional)*: The particular fields of interest that you would like extracted
-4. The second argument is a callback which has the following arguments supplied by facebook:
+- **profileFields** *(optional)*: The particular fields of interest that you would like extracted. This is beyondthe default.
+4. The second argument is a callback which has the following arguments supplied by Facebook:
 - **accessToken**
 - **refreshToken**
 - **profile** - this is the profile information sent from Facebook
@@ -218,20 +312,6 @@ app.get('/api/logout',(req,res)=>{
 };
 
 ```
-
-## How passport works
-
-When a user clicks logon from the client side the the user is redirected to the route  ```auth/facebook``` , which has a passport function as a callback (see route above) to forward the user's request to the  Facebook site.
-
-Facebook will then **ask the user if they grant permission**, and further action is done by the user to accept the request.
-
-Once this is done **facebook returns the information with the callback URL** that was declared in the passport.use statement that contains an additonal parameter with a code at the end of the URL. This **unique code** is supplied by Facebook that indicates the user has granted permission.
-
-The user is briefly then put on hold as the code is taken from the URL. Passport then sends a **follow up request to Facebook**, where Facebook will see the request code in the URL now and will reply with **user details**. The user will not be kicked into the OAuth flow again, as it has this code when it goes back to Facebook. The job by facebook is now done.
-
-The second argument we passed to the Facebook strategy was the **verify callback**. When we are out of the OAuth flow and the credentials have been verified we add/check this user with our database. The **done** function is called with the user object model **(userObj)** and is sent to the next section of the passport flow.
-
-See the diagram of the flow above to get a picture of what is handled by Passport.
 
 ## Cookie based authentication
 
