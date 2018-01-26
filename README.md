@@ -1,5 +1,21 @@
 # OAuth and PassportJS Workshop
 
+## Contents
+1. [Learning Outcomes](#learning-outcomes)
+2. [Introduction](#introduction)
+3. [What is OAuth](#what-is-oauth-and-how-does-it-work)
+4. [What is Passport.js](#so-what-is-passportjs-and-why-is-it-helpful-)
+5. [How does Passport work?](#how-does-passport-work)
+6. [Workshop](#passport-workshop-using-postgresql)
+
+## Learning Outcomes
+* To understand the principles of OAuth and how it works
+* To implement OAuth using PassportJS middleware
+* To use more advanced middleware
+* To gain authorisation to get information from a resource server and 
+* To save user data to a database as part of OAuth flow
+
+## Introduction
 You may have come across many applications that ask you to do use a 'social login' e.g. such as 'Sign in with Facebook'. There is a common misconception where people think you are are giving an application like this your social login details.
 
 #### This is not the case!!!
@@ -7,11 +23,6 @@ You may have come across many applications that ask you to do use a 'social logi
 
 The process involved is called OAuth and is a lot more complicated and safer than having your passwords distributed. This workshop goes over the high level processes and ideas involved for this to work, and will allow you to implement your very own social logins using PassportJS.
 
-## Learning Outcomes
-* To understand the principles of OAuth and how it works
-* To implement OAuth using PassportJS middleware
-* To use more advanced middleware that also uses promises
-* To get authorised to get information from a resource server and save it to a database
 
 
 ## What is OAuth and how does it work?
