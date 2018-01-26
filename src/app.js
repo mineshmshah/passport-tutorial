@@ -30,6 +30,7 @@ passport.use(new Strategy({
     // This is an error coming from pg
     if(err) {
       console.log('Database error',err);
+      return done(err)
     }
     // The search as successful but an empty string was returned so add profile
     if(!userObj){

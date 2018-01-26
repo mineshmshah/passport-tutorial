@@ -4,8 +4,6 @@ You may have come across many applications that ask you to do use a 'social logi
 
 #### This is not the case!!!
 
-![wrong](https://giphy.com/gifs/joel-mchale-incorrect-m8eIbBdkJK7Go)
-
 
 The process involved is called OAuth and is a lot more complicated and safer than having your passwords distributed. This workshop goes over the high level processes and ideas involved for this to work, and will allow you to implement your very own social logins using PassportJS.
 
@@ -41,6 +39,7 @@ OAuth actually is an authorisation client but frameworks that use it often deal 
 
 ### How does OAuth work?
 ![passportimage](/diagrams/OAuth.png)
+
 There are 4 main players involved with the OAuth process.
 
 * The **user** (A person)
