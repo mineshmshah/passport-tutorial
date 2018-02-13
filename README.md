@@ -1,5 +1,21 @@
 # OAuth and PassportJS Workshop
 
+## Contents
+1. [Learning Outcomes](#learning-outcomes)
+2. [Introduction](#introduction)
+3. [What is OAuth](#what-is-oauth-and-how-does-it-work)
+4. [What is Passport.js](#so-what-is-passportjs-and-why-is-it-helpful-)
+5. [How does Passport work?](#how-does-passport-work)
+6. [Workshop](#passport-workshop-using-postgresql)
+
+## Learning Outcomes
+* To understand the principles of OAuth and how it works
+* To implement OAuth using PassportJS middleware
+* To use more advanced middleware
+* To gain authorisation to get information from a resource server and 
+* To save user data to a database as part of OAuth flow
+
+## Introduction
 You may have come across many applications that ask you to do use a 'social login' e.g. such as 'Sign in with Facebook'. There is a common misconception where people think you are are giving an application like this your social login details.
 
 #### This is not the case!!!
@@ -7,11 +23,6 @@ You may have come across many applications that ask you to do use a 'social logi
 
 The process involved is called OAuth and is a lot more complicated and safer than having your passwords distributed. This workshop goes over the high level processes and ideas involved for this to work, and will allow you to implement your very own social logins using PassportJS.
 
-## Learning Outcomes
-* To understand the principles of OAuth and how it works
-* To implement OAuth using PassportJS middleware
-* To use more advanced middleware that also uses promises
-* To get authorised to get information from a resource server and save it to a database
 
 
 ## What is OAuth and how does it work?
@@ -171,6 +182,8 @@ const Strategy = require('passport-facebook').Strategy;
 FB_CLIENTID = [your facebook app id]
 FB_SECRET = [your facebook app secret]
 ```
+5. Add your domain to facebook so it knows where to expect the request from. On the dashboard go to `settings` > `+ add platform`> `choose website` > Enter your domain e.g. http://localhost:5000
+6. Add your callback url. On the dashboard go to `Facebook login` > `Settings` > Enter your callback url into `Valid OAuth redirect URIs` e.g. `http://localhost:5000/auth/facebook/callback`
 
 ## Launch Passport Strategy
 
@@ -263,7 +276,7 @@ const routes = require('./routes/authRoutes');
 
 ```js
 const passport = require('passport');
-const routes = require('express').Router()
+const router = require('express').Router()
 
 ```
 3. Export all the routes with module.exports at the bottom of the file.
@@ -274,7 +287,7 @@ module.exports = routes;
 4. Now add the routes after the imports in the file. The first route should be the route that a user from the client will click on in the front end. This is a message from the front end to our server to **start the OAuth flow**.
 ``` js
 
-app.get('/auth/facebook',
+router.get('/auth/facebook',
         passport.authenticate('facebook',
             {  scope: ['email']}));
 ```
@@ -284,10 +297,10 @@ The callback for the get method is where **passport is used to authenticated the
 
 5. A callback function was specified in  the Facebook strategy in app.js. When Facebook has authenticated the user, **Facebook will redirect back to server** with this URL and add a unique code at the end of it back to the server to indicate the person has been authenticated. The route for this is as follows:
 ``` js
-app.get('/auth/facebook/callback',
+router.get('/auth/facebook/callback',
 		passport.authenticate('facebook'),
 		(req,res)=>{
-				res.redirect('/home')
+				res.redirect('/')
 		}
 	);
 ```
@@ -295,7 +308,7 @@ A request is sent back to facebook with the code automatically by passport to re
 
 6. We will create a route to **check authentication**:
 ``` js
-app.get('/api/current_user',(req,res)=>{
+router.get('/api/current_user',(req,res)=>{
     res.send(req.user);
 
   });
@@ -303,7 +316,7 @@ app.get('/api/current_user',(req,res)=>{
 
 7. Create a routes to **logout**. Logout is a special method that exists in the request function now thanks to PassportJS.
 ``` js
-app.get('/api/logout',(req,res)=>{
+router.get('/api/logout',(req,res)=>{
     //removes the cookie
     req.logout();
     res.redirect('/');
